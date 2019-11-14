@@ -1,0 +1,31 @@
+version: '2'
+service:
+  rocketchat:
+    image: chat-ten-lua
+    restart: unless-stopped
+    environment:
+      - MONGODB_COLLECTION=user_collections
+      - MONGODB_URL=mongodb://rocketchat:rocketchat%40123@mongo:27018/rocketchat
+      - MONGODB_DB_NAME=rocketchat
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongo
+      - mongoClientTemp
+    labels:
+      - "traefik.backend=tenlua"
+  mongo:
+    image: mongo:3.2
+    restart: unless-stopped
+    ports:
+      - 27018:27017
+    command: mongod --smallfiles --logpath=/dev/null # --quiet
+  mongoClientTemp:
+    image: mongo:3.2
+    container_name: mongoClientTemp
+    command: mongo --host mongo --eval  "db.getSiblingDB('rocketchat').createUser({user:'rocketchat', pwd:'rocketchat@123', roles:[{role:'readWrite',db:'rocketchat'}]});"
+    depends_on:
+      - mongo 
+    
+
+      
